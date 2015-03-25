@@ -1,8 +1,11 @@
 package monkey;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +44,14 @@ public class ADBUtil {
 	 * 重启手机 指定某个手机重启待验证
 	 */
 	public static final String REBOOT = "reboot";
+	/**
+	 * 崩溃标识
+	 */
+	public static String CRASH = "shortMsg=Process crashed";
+	/**
+	 * 测试包名和对应测试运行类
+	 */
+	public static String TESTCLASS_PACKAGE = "com.xxx.xxxx.test/com.xxx.android.test.InstrumentationTestRunner";
 
 	// 选择指定的设备 adb -s XXXX install 1.apk
 	/**
@@ -150,5 +161,239 @@ public class ADBUtil {
 					+ osVersion + " API " + sdkApi);
 		}
 		return deviceNames;
+	}
+
+	/**
+	 * 文件导入到手机中
+	 */
+	public static String pushExcelDataFile(String device, String pcPath,
+			String phonePath) {
+		BufferedReader br = null;
+		String result = "";
+		if (null == device || "".equals(device)) {
+			device = "";
+		} else {
+			device = " -s " + device;
+		}
+		try {
+			Process p = Runtime.getRuntime().exec(
+					"adb " + device + " push " + pcPath + " " + phonePath);
+			br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			while ((result = br.readLine()) != null) {
+				System.out.println("导入文件得到的命令行返回结果是" + result);
+				break;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("向手机中导入文件出错...");
+		}
+		return result;
+	}
+
+	/**
+	 * 执行命令
+	 * 
+	 * @param command
+	 */
+	public static String runCommand(String command) {
+		BufferedReader br = null;
+		String result = "";
+		try {
+			Process p = Runtime.getRuntime().exec(command);
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			while ((result = br.readLine()) != null) {
+				System.out.println("执行命令返回结果是" + result);
+				break;
+			}
+		} catch (IOException e) {
+			System.out.println("运行cmd命令出错...");
+		}
+		return result;
+	}
+
+	/**
+	 * 手机中的文件导入到电脑
+	 */
+	public static String pullXMLResultFile(String device, String phonePath,
+			String pcPath, String outFileName) {
+		BufferedReader br = null;
+		String result = "";
+		if (null == device || "".equals(device)) {
+			device = "";
+		} else {
+			device = " -s " + device;
+		}
+		try {
+			Process p = Runtime.getRuntime().exec(
+					" adb " + device + " pull " + phonePath + " " + pcPath
+							+ outFileName + ".xml");
+			br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			while ((result = br.readLine()) != null) {
+				System.out.println("XML文件导入电脑得到的命令行返回结果是" + result);
+				break;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("向电脑中导入XML文件出错...");
+		}
+		if (null == result) {
+			result = "";
+		}
+		return result;
+	}
+
+	/**
+	 * 命令行工具 运行用例 返回用例的运行结果
+	 */
+	public static String runTest(String className, String device) {
+		System.out.println("执行了runTest方法");
+		String result = "";
+		String error = "";
+		StringBuffer sb = new StringBuffer();
+		StringBuffer errorsb = new StringBuffer();
+		BufferedReader br = null;
+		BufferedReader errorbr = null;
+		if (null == device || "".equals(device)) {
+			device = "";
+		} else {
+			device = " -s " + device;
+		}
+		try {
+			Process p = Runtime.getRuntime().exec(
+					"adb " + device + " shell am instrument -e class "
+							+ className + " -w " + TESTCLASS_PACKAGE);
+			System.out.println("adb " + device
+					+ " shell am instrument -e class " + className + " -w "
+					+ TESTCLASS_PACKAGE);
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			errorbr = new BufferedReader(new InputStreamReader(
+					p.getErrorStream()));
+			while ((result = br.readLine()) != null) {
+				// System.out.println("运行用例时得到的命令行返回结果是" + result);
+				sb.append(result);
+			}
+			while ((error = errorbr.readLine()) != null) {
+				// System.out.println("运行用例时得到的命令行返回error结果是" + error);
+				errorsb.append(error);
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("运行命令出错...");
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("关闭流出错...");
+				}
+			}
+		}
+
+		System.out.println("最终得到的result结果是：" + sb.toString());
+		System.out.println("最终得到的error结果是：" + errorsb.toString());
+		return sb.append(errorsb).toString();
+	}
+
+	/**
+	 * 将截图复制到电脑上 并且删除文件夹内的所有文件 以免重复导入 /sdcard/Robotium-Screenshots/ 方法待完善
+	 * 
+	 * @return
+	 */
+	public static String copyPicture(String device, String pcPath) {
+		System.out.println("执行了runTest方法");
+		String result = "";
+		String error = "";
+		StringBuffer sb = new StringBuffer();
+		StringBuffer errorsb = new StringBuffer();
+		BufferedReader br = null;
+		BufferedReader errorbr = null;
+		if (null == device || "".equals(device)) {
+			device = "";
+		} else {
+			device = " -s " + device;
+		}
+		try {
+			Process p = Runtime.getRuntime().exec("adb " + device + " shell");
+			p = Runtime.getRuntime().exec(
+					"pull /sdcard/Robotium-Screenshots/ " + pcPath);
+			p = Runtime.getRuntime().exec("su");
+			p = Runtime.getRuntime().exec("cd /sdcard/");
+			p = Runtime.getRuntime().exec("rm -r Robotium-Screenshots");
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			errorbr = new BufferedReader(new InputStreamReader(
+					p.getErrorStream()));
+			while ((result = br.readLine()) != null) {
+				// System.out.println("运行用例时得到的命令行返回结果是" + result);
+				sb.append(result);
+			}
+			while ((error = errorbr.readLine()) != null) {
+				// System.out.println("运行用例时得到的命令行返回error结果是" + error);
+				errorsb.append(error);
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("运行命令出错...");
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("关闭流出错...");
+				}
+			}
+		}
+
+		System.out.println("最终得到的result结果是：" + sb.toString());
+		System.out.println("最终得到的error结果是：" + errorsb.toString());
+		return sb.append(errorsb).toString();
+	}
+
+	/**
+	 * 运行用例 判断是否需要重跑 返回是否运行通过
+	 * 
+	 * @param TestCase
+	 * @return
+	 */
+	public static boolean runTestCase(String TestCase, String device) {
+		boolean isPass = false;
+		for (int i = 0; i < 2; i++) {
+			String message = runTest(TestCase, device);
+			if (message.contains(CRASH)) {
+				System.out.println("@@@@@@@@@@@@@@@ 重复执行了:" + TestCase
+						+ " @@@@@@@@@@@@@@@@@@");
+				continue;
+			} else {
+				if (message.contains("error") || message.contains("Error")) {
+					isPass = false;
+					break;
+				}
+				isPass = true;
+				break;
+			}
+		}
+		return isPass;
+	}
+
+	/**
+	 * 得到静态字段的值 public static final修饰的 没用了这个方法 现在是引入外部xml文件
+	 * 
+	 * @return
+	 */
+	public static List<String> getFinalStrings() {
+		List<String> list = new ArrayList<String>();
+		Field[] fields = ADBUtil.class.getDeclaredFields();
+		for (Field field : fields) {
+			// 属性的修饰
+			String descriptor = Modifier.toString(field.getModifiers());
+			descriptor = descriptor.equals("") == true ? "" : descriptor + " ";
+			if (descriptor.contains("public static final")) {
+				list.add(field.getName());
+			}
+		}
+		return list;
 	}
 }

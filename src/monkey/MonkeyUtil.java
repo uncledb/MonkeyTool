@@ -85,7 +85,10 @@ public class MonkeyUtil {
 	/**
 	 * 运行bat 并删除bat
 	 */
-	public static String runBat(String batPath) {
+	public static String runBat(String batPath, boolean isRedirect) {
+		if (isRedirect) {
+			// 如果是重定向 复制到手机中
+		}
 		String result = "";
 		String error = "";
 		StringBuffer sb = new StringBuffer();
@@ -126,5 +129,12 @@ public class MonkeyUtil {
 				.append("\r\n")
 				.append(errorsb.toString() == "" ? "" : "错误信息："
 						+ errorsb.toString()).append("\r\n").toString();
+	}
+
+	/**
+	 * 运行bat 并删除bat 不重定向
+	 */
+	public static String runBat(String batPath) {
+		return runBat(batPath, false);
 	}
 }
