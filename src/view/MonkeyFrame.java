@@ -1,4 +1,4 @@
-package monkey;
+package view;
 
 import java.awt.Container;
 import java.awt.Font;
@@ -14,6 +14,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+
+import pojo.Monkey;
+import util.MonkeyUtil;
 
 public class MonkeyFrame extends JFrame {
 	private static final long serialVersionUID = 1L;

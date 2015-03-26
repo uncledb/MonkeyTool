@@ -1,4 +1,4 @@
-package monkey;
+package start;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

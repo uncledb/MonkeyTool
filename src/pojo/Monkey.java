@@ -1,4 +1,4 @@
-package monkey;
+package pojo;
 
 public class Monkey {
 	private String throttle;// 执行频率
