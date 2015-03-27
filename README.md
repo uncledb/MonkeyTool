@@ -9,7 +9,8 @@ OS:windows 64bit
 IDE:Eclipse  
 JDK:1.8  
 
-运行环境：    
+运行环境：  
+OS Windows     
 1.jdk  
 2.android sdk adb   
   
