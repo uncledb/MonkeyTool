@@ -4,6 +4,11 @@ Monkey可视化执行工具
 
 版本：1.0
 
+开发环境：
+OS:windows 64bit   
+IDE:Eclipse  
+JDK:1.8  
+
 运行环境：  
 1.jdk  
 2.android sdk adb   
