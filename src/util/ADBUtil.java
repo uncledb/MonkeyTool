@@ -2,11 +2,14 @@ package util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +120,27 @@ public class ADBUtil {
 	}
 
 	/**
+	 * 执行命令
+	 * 
+	 * @param command
+	 */
+	public static String runCommand(String command) {
+		BufferedReader br = null;
+		String result = "";
+		try {
+			Process p = Runtime.getRuntime().exec(command);
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			while ((result = br.readLine()) != null) {
+				System.out.println("执行命令返回结果是" + result);
+				break;
+			}
+		} catch (IOException e) {
+			System.out.println("运行cmd命令出错...");
+		}
+		return result;
+	}
+
+	/**
 	 * 获得所有的设备
 	 * 
 	 * @return
@@ -166,8 +190,7 @@ public class ADBUtil {
 	/**
 	 * 文件导入到手机中
 	 */
-	public static String pushExcelDataFile(String device, String pcPath,
-			String phonePath) {
+	public static String pushFile(String device, String pcPath, String phonePath) {
 		BufferedReader br = null;
 		String result = "";
 		if (null == device || "".equals(device)) {
@@ -191,31 +214,9 @@ public class ADBUtil {
 	}
 
 	/**
-	 * 执行命令
-	 * 
-	 * @param command
-	 */
-	public static String runCommand(String command) {
-		BufferedReader br = null;
-		String result = "";
-		try {
-			Process p = Runtime.getRuntime().exec(command);
-			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			while ((result = br.readLine()) != null) {
-				System.out.println("执行命令返回结果是" + result);
-				break;
-			}
-		} catch (IOException e) {
-			System.out.println("运行cmd命令出错...");
-		}
-		return result;
-	}
-
-	/**
 	 * 手机中的文件导入到电脑
 	 */
-	public static String pullXMLResultFile(String device, String phonePath,
-			String pcPath, String outFileName) {
+	public static String pullFile(String device, String phonePath, String pcPath) {
 		BufferedReader br = null;
 		String result = "";
 		if (null == device || "".equals(device)) {
@@ -225,16 +226,15 @@ public class ADBUtil {
 		}
 		try {
 			Process p = Runtime.getRuntime().exec(
-					" adb " + device + " pull " + phonePath + " " + pcPath
-							+ outFileName + ".xml");
+					" adb " + device + " pull " + phonePath + " " + pcPath);
 			br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 			while ((result = br.readLine()) != null) {
-				System.out.println("XML文件导入电脑得到的命令行返回结果是" + result);
+				System.out.println("文件导入电脑得到的命令行返回结果是" + result);
 				break;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.out.println("向电脑中导入XML文件出错...");
+			System.out.println("向电脑中导入文件出错...");
 		}
 		if (null == result) {
 			result = "";
@@ -301,7 +301,8 @@ public class ADBUtil {
 	 * 
 	 * @return
 	 */
-	public static String copyPicture(String device, String pcPath) {
+	public static String copyPicture(String device, String phonePath,
+			String pcPath) {
 		System.out.println("执行了runTest方法");
 		String result = "";
 		String error = "";
@@ -316,8 +317,7 @@ public class ADBUtil {
 		}
 		try {
 			Process p = Runtime.getRuntime().exec("adb " + device + " shell");
-			p = Runtime.getRuntime().exec(
-					"pull /sdcard/Robotium-Screenshots/ " + pcPath);
+			p = Runtime.getRuntime().exec("pull " + phonePath + " " + pcPath);
 			p = Runtime.getRuntime().exec("su");
 			p = Runtime.getRuntime().exec("cd /sdcard/");
 			p = Runtime.getRuntime().exec("rm -r Robotium-Screenshots");
@@ -395,5 +395,117 @@ public class ADBUtil {
 			}
 		}
 		return list;
+	}
+
+	/**
+	 * 写bat文件
+	 */
+	public synchronized static void writeBat(String path, String cmd) {
+		try {
+			cmd = cmd + "\n";
+			File file = new File(path);
+			if (file.exists()) {
+				file.delete();
+			}
+			FileOutputStream out = new FileOutputStream(path, true);
+			out.write(cmd.getBytes());
+			out.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 写ch文件
+	 */
+	public synchronized static void writeCh(String path, String cmd) {
+		try {
+			cmd = cmd + "\n";
+			File file = new File(path);
+			if (file.exists()) {
+				file.delete();
+			}
+			FileOutputStream out = new FileOutputStream(path, true);
+			out.write(cmd.getBytes());
+			out.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 运行bat 并删除bat
+	 */
+	public static String runBat(String batPath, String chPath) {
+		String result = "";
+		String error = "";
+		StringBuffer sb = new StringBuffer();
+		StringBuffer errorsb = new StringBuffer();
+		BufferedReader br = null;
+		BufferedReader errorbr = null;
+		Process p;
+		try {
+			p = Runtime.getRuntime().exec(batPath);
+			br = new BufferedReader(new InputStreamReader(p.getInputStream(),
+					"gbk"));
+			errorbr = new BufferedReader(new InputStreamReader(
+					p.getErrorStream(), "gbk"));
+			while ((result = br.readLine()) != null) {
+				sb.append(result);
+			}
+			while ((error = errorbr.readLine()) != null) {
+				errorsb.append(error);
+			}
+			p.waitFor();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			File file = new File(batPath);
+			if (file.exists()) {
+				file.delete();
+			}
+			if (!(null == chPath || "".equals(chPath))) {
+				file = new File(chPath);
+				if (file.exists()) {
+					file.delete();
+				}
+			}
+		}
+		System.out.println("最终得到的result结果是：" + sb.toString());
+		System.out.println("最终得到的error结果是：" + errorsb.toString());
+
+		return sb
+				.append("\r\n")
+				.append(errorsb.toString() == "" ? "" : "错误信息："
+						+ errorsb.toString()).append("\r\n").toString();
+	}
+
+	/**
+	 * 获取当前时间
+	 * 
+	 * @return
+	 */
+	public static String getTime() {
+		String time = "";
+		Date date = new Date();
+		SimpleDateFormat s = new SimpleDateFormat("MMdd_hhmm");
+		time = s.format(date);
+		System.out.println(time);
+		return time;
+	}
+
+	/**
+	 * 判断String是否为空
+	 * 
+	 * @param str
+	 * @return
+	 */
+	public static boolean isBlank(String str) {
+		if (null == str || "".equals(str)) {
+			return true;
+		}
+		return false;
 	}
 }

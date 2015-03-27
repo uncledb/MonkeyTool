@@ -1,26 +1,34 @@
 package view;
 
 import java.awt.Container;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
 import pojo.Monkey;
+import util.ADBUtil;
 import util.MonkeyUtil;
 
 public class MonkeyFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 
+	private Monkey monkey = null;
+	private String pcLogPath = "D:\\";
+	private String defaultThrottle = "200";
+	private String defaultSeed = "20";
+	private String defaultTimes = "100";
+
+	protected JFileChooser jFileChooser;
 	protected JPanel jPanel;
 	protected JTextField jTextFeild_package;
 	protected JTextField jTextFeild_seed;
@@ -37,7 +45,6 @@ public class MonkeyFrame extends JFrame {
 	protected JButton btn_stop;
 	protected JButton btn_export;
 	protected String result = "";
-	static Font font = new Font("微软雅黑", Font.BOLD, 12);
 
 	public MonkeyFrame() {
 		initComponents();
@@ -45,6 +52,7 @@ public class MonkeyFrame extends JFrame {
 
 	private void initComponents() {
 		Container con = this.getContentPane();
+
 		jPanel = new JPanel();
 		BtnListener btnListener = new BtnListener();
 		jLable_package = new JLabel("package:");
@@ -52,14 +60,18 @@ public class MonkeyFrame extends JFrame {
 		jLable_throttle = new JLabel("频率 :");
 		jLable_times = new JLabel("次数 :");
 		jTextFeild_package = new JTextField(41);
+
 		jTextFeild_seed = new JTextField(10);
+		jTextFeild_seed.setText("20");
 		jTextFeild_throttle = new JTextField(10);
+		jTextFeild_throttle.setText("200");
 		jTextFeild_times = new JTextField(10);
+		jTextFeild_times.setText("100");
 		btn_run = new JButton("run  monkey");
 		btn_run.addActionListener(btnListener);
 		btn_stop = new JButton("stop monkey");
 		btn_stop.addActionListener(btnListener);
-		btn_export = new JButton("导出结果到E盘/Robo-Monkey/");
+		btn_export = new JButton("运行结束 导出结果");
 		btn_export.addActionListener(btnListener);
 
 		textArea = new JTextArea("提示窗口：" + "\r\n");
@@ -82,6 +94,7 @@ public class MonkeyFrame extends JFrame {
 		jPanel.add(btn_run);
 		jPanel.add(btn_stop);
 		jPanel.add(btn_export);
+		// jPanel.add(jFileChooser);
 		jPanel.add(jScrollPane1);
 		con.add(jPanel);
 		setTitle("monkeyTool");
@@ -97,11 +110,21 @@ public class MonkeyFrame extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == btn_run) {
 				System.out.println("点击了run monkey");
+				String packageName = jTextFeild_package.getText().trim();
+				if (ADBUtil.isBlank(packageName)) {
+					textArea.append("注意：请您这是要测试的包名" + "\r\n");
+					return;
+				}
 				String throttle = jTextFeild_throttle.getText().trim();
 				String seed = jTextFeild_seed.getText().trim();
 				String times = jTextFeild_times.getText().trim();
-				String packageName = jTextFeild_package.getText().trim();
-				Monkey monkey = new Monkey();
+				// 设置默认值
+				throttle = ADBUtil.isBlank(throttle) == true ? defaultThrottle
+						: throttle;
+				seed = ADBUtil.isBlank(seed) == true ? defaultSeed : seed;
+				times = ADBUtil.isBlank(times) == true ? defaultTimes : times;
+
+				monkey = new Monkey();
 				monkey.setPackageName(packageName);
 				monkey.setThrottle(throttle);
 				monkey.setSeed(seed);
@@ -113,21 +136,33 @@ public class MonkeyFrame extends JFrame {
 				result = MonkeyUtil.stopMonkey();
 				textArea.append("stop monkey：" + result + "\r\n");
 			} else if (e.getSource() == btn_export) {
-				result = MonkeyUtil.pullXMLResultFile("monkeyResult");
-				textArea.append("导出文件：" + result + "\r\n");
-				System.out.println("导出结果到E盘/Robo-Monkey/");
+				if (monkey != null) {
+					jFileChooser = new JFileChooser();
+					jFileChooser.setFileSelectionMode(1);// 设定只能选择到文件夹
+					// 设置文件选择器的默认路径
+					jFileChooser
+							.setCurrentDirectory(new java.io.File(pcLogPath));
+					// 设置窗口标题
+					jFileChooser.setDialogTitle("选择保存目录");
+					jFileChooser.setFont(new java.awt.Font("宋体", 0, 12));
+
+					int state = jFileChooser.showSaveDialog(null);// 此句是打开文件选择器界面的触发语句
+					if (state == 1) {
+						return;// 撤销则返回
+					} else {
+						File f = jFileChooser.getSelectedFile();// f为选择到的目录
+						pcLogPath = f.getAbsolutePath();
+						System.out.println(f.getAbsolutePath());
+						result = ADBUtil.pullFile(null,
+								monkey.getShortLogFilePath(), pcLogPath);
+						textArea.append("导出文件：" + result + "\r\n");
+						System.out.println("导出结果到" + pcLogPath);
+					}
+				} else {
+					textArea.append("提示：请先运行monkey命令" + "\r\n");
+
+				}
 			}
 		}
 	}
-
-	public static void main(String[] args) {
-		UIManager.put("Button.font", font);
-		UIManager.put("TextArea.font", font);
-		UIManager.put("ComboBox.font", font);
-		UIManager.put("TextField.font", font);
-		UIManager.put("Label.font", font);
-		MonkeyFrame monkeyFrame = new MonkeyFrame();
-		System.out.println(monkeyFrame.getClass().getSimpleName());
-	}
-
 }

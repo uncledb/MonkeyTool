@@ -6,10 +6,7 @@ public class Monkey {
 	private boolean ignoreCrashes;// 是否忽略崩溃
 	private String times;// 次数
 	private String logFilePath = "/sdcard/monkeyResult.txt 2>&1";// /sdcard/testResult.txt
-																	// 2>&1
-																	// 日志文件路径
 	private String packageName;
-
 	private String device;
 
 	public String getThrottle() {
@@ -66,6 +63,11 @@ public class Monkey {
 
 	public void setPackageName(String packageName) {
 		this.packageName = packageName;
+	}
+
+	public String getShortLogFilePath() {
+		return getLogFilePath().substring(0, getLogFilePath().length() - 4)
+				.trim();
 	}
 
 }
