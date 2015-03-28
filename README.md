@@ -1,6 +1,7 @@
 # MonkeyTool
-
-Monkey可视化执行工具   
+介绍：  
+Monkey是android sdk提供的一个小工具，它可以模拟用户的输入，可以看成是一个小monkey在胡乱的把玩手机；  
+MonkeyToo则是为了方便运行monkey而制作的一个工具，即Monkey可视化设置工具   
 
 版本：1.0
 
@@ -31,6 +32,8 @@ OS Windows
 3.运行结束，导出报告并查看   
 提示：monkey日志主要关注三个点：ANR,Crash,Exception  
 
+附加说明：  
+monkey命令的参数并非只有工具界面上显示的几个，也不是只有程序里写的那几个。只不过程序中设置的是非常常用的参数，如果读者希望或得更多的关于monkey指令的信息，请参见官方说明或查看monkey帮助  
 
 
 
