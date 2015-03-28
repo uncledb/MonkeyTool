@@ -1,7 +1,7 @@
 # MonkeyTool
 介绍：  
 Monkey是android sdk提供的一个小工具，它可以模拟用户的输入，可以看成是一个小monkey在胡乱的把玩手机；  
-MonkeyToo则是为了方便运行monkey而制作的一个工具，即Monkey可视化设置工具   
+MonkeyTool则是为了方便运行monkey而制作的一个工具，即Monkey可视化设置工具   
 
 版本：1.0
 
