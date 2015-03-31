@@ -5,7 +5,7 @@ public class Monkey {
 	private String seed;// 事件序列
 	private boolean ignoreCrashes;// 是否忽略崩溃
 	private String times;// 次数
-	private String logFilePath = "/sdcard/monkeyResult.txt 2>&1";// /sdcard/testResult.txt
+	private String logFilePath = "/sdcard/monkeyResult.txt 2>&1";// /sdcard/monkeyResult.txt
 	private String packageName;
 	private String device;
 
