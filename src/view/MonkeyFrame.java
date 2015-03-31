@@ -19,9 +19,17 @@ import pojo.Monkey;
 import util.ADBUtil;
 import util.MonkeyUtil;
 
+/**
+ * time 尽量不能小于30
+ * 
+ * @author uncle
+ * 
+ */
 public class MonkeyFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
-
+	private Runnable runMonkeyThread = null;
+	private boolean isRunning = false;
+	Thread thread = null;
 	private Monkey monkey = null;
 	private String pcLogPath = "D:\\";
 	private String defaultThrottle = "200";
@@ -59,7 +67,7 @@ public class MonkeyFrame extends JFrame {
 		jLable_seed = new JLabel("seed:");
 		jLable_throttle = new JLabel("频率 :");
 		jLable_times = new JLabel("次数 :");
-		jTextFeild_package = new JTextField(41);
+		jTextFeild_package = new JTextField(50);
 
 		jTextFeild_seed = new JTextField(10);
 		jTextFeild_seed.setText("20");
@@ -68,7 +76,7 @@ public class MonkeyFrame extends JFrame {
 		jTextFeild_times = new JTextField(10);
 		jTextFeild_times.setText("100");
 		btn_run = new JButton("run  monkey");
-		btn_run.addActionListener(btnListener);
+		btn_run.addActionListener(new RunBtnListener());
 		btn_stop = new JButton("stop monkey");
 		btn_stop.addActionListener(btnListener);
 		btn_export = new JButton("运行结束 导出结果");
@@ -76,8 +84,8 @@ public class MonkeyFrame extends JFrame {
 
 		textArea = new JTextArea("提示窗口：" + "\r\n");
 		jScrollPane1 = new JScrollPane(textArea);
-		textArea.setColumns(40);
-		textArea.setRows(15);
+		textArea.setColumns(60);
+		textArea.setRows(20);
 		textArea.setLineWrap(true);
 		textArea.setWrapStyleWord(true);
 		jScrollPane1.setViewportView(textArea);
@@ -98,59 +106,77 @@ public class MonkeyFrame extends JFrame {
 		jPanel.add(jScrollPane1);
 		con.add(jPanel);
 		setTitle("monkeyTool");
-		setSize(600, 400);
-		setLocation(400, 200);
+		setSize(380, 425);
+		setLocation(500, 200);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setVisible(true);
 
 	}
 
+	class RunBtnListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			if (isRunning) {
+				textArea.append("monkey正在运行!!!请稍候...\r\n");
+				return;
+			}
+			String packageName = jTextFeild_package.getText().trim();
+			if (ADBUtil.isBlank(packageName)) {
+				textArea.append("注意：请您填写要测试的包名" + "\r\n");
+				return;
+			}
+			textArea.append("monkey is starting...\r\n");
+			thread = new Thread(runMonkeyThread) {
+				public void run() {
+					isRunning = true;
+					System.out.println("点击了run monkey");
+					String throttle = jTextFeild_throttle.getText().trim();
+					String seed = jTextFeild_seed.getText().trim();
+					String times = jTextFeild_times.getText().trim();
+					String packageName = jTextFeild_package.getText().trim();
+					// 设置默认值
+					throttle = ADBUtil.isBlank(throttle) == true ? defaultThrottle
+							: throttle;
+					seed = ADBUtil.isBlank(seed) == true ? defaultSeed : seed;
+					times = ADBUtil.isBlank(times) == true ? defaultTimes
+							: times;
+					monkey = new Monkey();
+					monkey.setPackageName(packageName);
+					monkey.setThrottle(throttle);
+					monkey.setSeed(seed);
+					monkey.setTimes(times);
+					result = MonkeyUtil.runMonkey(monkey);
+					System.out.println("线程标志置为false");
+					isRunning = false;
+				};
+			};
+			thread.setPriority(9);
+			thread.start();
+		}
+	}
+
 	class BtnListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (e.getSource() == btn_run) {
-				System.out.println("点击了run monkey");
-				String packageName = jTextFeild_package.getText().trim();
-				if (ADBUtil.isBlank(packageName)) {
-					textArea.append("注意：请您这是要测试的包名" + "\r\n");
-					return;
-				}
-				String throttle = jTextFeild_throttle.getText().trim();
-				String seed = jTextFeild_seed.getText().trim();
-				String times = jTextFeild_times.getText().trim();
-				// 设置默认值
-				throttle = ADBUtil.isBlank(throttle) == true ? defaultThrottle
-						: throttle;
-				seed = ADBUtil.isBlank(seed) == true ? defaultSeed : seed;
-				times = ADBUtil.isBlank(times) == true ? defaultTimes : times;
-
-				monkey = new Monkey();
-				monkey.setPackageName(packageName);
-				monkey.setThrottle(throttle);
-				monkey.setSeed(seed);
-				monkey.setTimes(times);
-				result = MonkeyUtil.runMonkey(monkey);
-				textArea.append("run monkey：" + result + "\r\n");
-			} else if (e.getSource() == btn_stop) {
+			if (e.getSource() == btn_stop) {
 				System.out.println("点击了stop monkey");
 				result = MonkeyUtil.stopMonkey();
-				textArea.append("stop monkey：" + result + "\r\n");
+				textArea.append("monkey stopped!" + "\r\n");
 			} else if (e.getSource() == btn_export) {
 				if (monkey != null) {
 					jFileChooser = new JFileChooser();
 					jFileChooser.setFileSelectionMode(1);// 设定只能选择到文件夹
 					// 设置文件选择器的默认路径
-					jFileChooser
-							.setCurrentDirectory(new java.io.File(pcLogPath));
+					jFileChooser.setCurrentDirectory(new java.io.File(pcLogPath));
 					// 设置窗口标题
 					jFileChooser.setDialogTitle("选择保存目录");
 					jFileChooser.setFont(new java.awt.Font("宋体", 0, 12));
-
-					int state = jFileChooser.showSaveDialog(null);// 此句是打开文件选择器界面的触发语句
+					int state = jFileChooser.showSaveDialog(null);
 					if (state == 1) {
-						return;// 撤销则返回
+						return;
 					} else {
-						File f = jFileChooser.getSelectedFile();// f为选择到的目录
+						File f = jFileChooser.getSelectedFile();
 						pcLogPath = f.getAbsolutePath();
 						System.out.println(f.getAbsolutePath());
 						result = ADBUtil.pullFile(null,
@@ -160,7 +186,6 @@ public class MonkeyFrame extends JFrame {
 					}
 				} else {
 					textArea.append("提示：请先运行monkey命令" + "\r\n");
-
 				}
 			}
 		}

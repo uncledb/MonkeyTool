@@ -403,10 +403,6 @@ public class ADBUtil {
 	public synchronized static void writeBat(String path, String cmd) {
 		try {
 			cmd = cmd + "\n";
-			File file = new File(path);
-			if (file.exists()) {
-				file.delete();
-			}
 			FileOutputStream out = new FileOutputStream(path, true);
 			out.write(cmd.getBytes());
 			out.close();
@@ -417,15 +413,11 @@ public class ADBUtil {
 	}
 
 	/**
-	 * 写ch文件
+	 * 写sh文件
 	 */
 	public synchronized static void writeCh(String path, String cmd) {
 		try {
 			cmd = cmd + "\n";
-			File file = new File(path);
-			if (file.exists()) {
-				file.delete();
-			}
 			FileOutputStream out = new FileOutputStream(path, true);
 			out.write(cmd.getBytes());
 			out.close();
@@ -438,7 +430,7 @@ public class ADBUtil {
 	/**
 	 * 运行bat 并删除bat
 	 */
-	public static String runBat(String batPath, String chPath) {
+	public static String runBat(String batPath, String shPath) {
 		String result = "";
 		String error = "";
 		StringBuffer sb = new StringBuffer();
@@ -447,6 +439,7 @@ public class ADBUtil {
 		BufferedReader errorbr = null;
 		Process p;
 		try {
+
 			p = Runtime.getRuntime().exec(batPath);
 			br = new BufferedReader(new InputStreamReader(p.getInputStream(),
 					"gbk"));
@@ -455,10 +448,16 @@ public class ADBUtil {
 			while ((result = br.readLine()) != null) {
 				sb.append(result);
 			}
+
 			while ((error = errorbr.readLine()) != null) {
+				System.out.println("read");
 				errorsb.append(error);
 			}
-			p.waitFor();
+			// p.exitValue()==0表示正常结束，1：非正常结束
+			if (p.waitFor() != 0) {
+				if (p.exitValue() == 1)
+					System.err.println("命令执行失败!");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -466,20 +465,31 @@ public class ADBUtil {
 			if (file.exists()) {
 				file.delete();
 			}
-			if (!(null == chPath || "".equals(chPath))) {
-				file = new File(chPath);
-				if (file.exists()) {
-					file.delete();
+			if (null != shPath && (!"".equals(shPath))) {
+				File file2 = new File(shPath);
+				if (file2.exists()) {
+					file2.delete();
+					System.out.println("删除sh成功");
+				}
+			}
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					System.out.println("关闭流出错");
+				}
+			}
+			if (errorbr != null) {
+				try {
+					errorbr.close();
+				} catch (IOException e) {
+					System.out.println("关闭流出错");
 				}
 			}
 		}
-		System.out.println("最终得到的result结果是：" + sb.toString());
-		System.out.println("最终得到的error结果是：" + errorsb.toString());
-
-		return sb
-				.append("\r\n")
-				.append(errorsb.toString() == "" ? "" : "错误信息："
-						+ errorsb.toString()).append("\r\n").toString();
+		System.out.println("result结果是：" + sb.toString());
+		System.out.println("error结果是：" + errorsb.toString());
+		return sb.append(errorsb.toString()).append("\r\n").toString();
 	}
 
 	/**
