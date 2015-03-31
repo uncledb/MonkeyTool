@@ -472,19 +472,15 @@ public class ADBUtil {
 					System.out.println("删除sh成功");
 				}
 			}
-			if (br != null) {
-				try {
+			try {
+				if (br != null) {
 					br.close();
-				} catch (IOException e) {
-					System.out.println("关闭流出错");
 				}
-			}
-			if (errorbr != null) {
-				try {
+				if (errorbr != null) {
 					errorbr.close();
-				} catch (IOException e) {
-					System.out.println("关闭流出错");
 				}
+			} catch (IOException e) {
+				System.out.println("关闭流出错");
 			}
 		}
 		System.out.println("result结果是：" + sb.toString());
@@ -517,5 +513,21 @@ public class ADBUtil {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 删除pc文件
+	 */
+	public static void deletePcFile(String... path) {
+		if (path != null) {
+			for (int i = 0; i < path.length; i++) {
+				if (null != path[i] && (!"".equals(path[i]))) {
+					File file = new File(path[i]);
+					if (file.exists()) {
+						file.delete();
+					}
+				}
+			}
+		}
 	}
 }

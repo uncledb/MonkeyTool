@@ -10,10 +10,10 @@ import pojo.Monkey;
  */
 public class MonkeyUtil {
 	// 运行monkey的临时文件
-	private static final String BAT_PATH = "c:/exec.bat";
-	private static final String SH_PATH = "c:/cmd.sh";
+	public static final String BAT_PATH = "c:/exec.bat";
+	public static final String SH_PATH = "c:/cmd.sh";
 	// 停止monkey的临时文件
-	private static final String STOP_BAT_PATH = "c:/stop_exec.bat";
+	public static final String STOP_BAT_PATH = "c:/stop_exec.bat";
 
 	/**
 	 * 运行monkey指令
@@ -28,11 +28,12 @@ public class MonkeyUtil {
 				+ " --ignore-crashes --ignore-timeouts --monitor-native-crashes -v -v -v "
 				+ monkey.getTimes() + ">" + monkey.getLogFilePath();
 		System.out.println(monkeyCmd);
-		// v2.0版本
+		// v2.0版本 2015-03-31
+		ADBUtil.deletePcFile(BAT_PATH, SH_PATH);
 		writeRunBat("adb shell \"" + monkeyCmd + "\"");
 		return runBat(BAT_PATH);
 
-		// 后续版本完善
+		// 后续版本完善 存在一直卡住的问题 本版本未采用 < 定向sh文件
 		// writeRunCh(monkeyCmd);
 		// writeRunCh("exit");
 		// writeRunBat("adb shell < " + SH_PATH);
@@ -49,6 +50,7 @@ public class MonkeyUtil {
 	public static String stopMonkey() {
 		String stopCmd = "for /f \"tokens=2\" %%a in ('adb shell ps ^|findstr \"monkey\" ') do adb shell kill %%a";
 		System.out.println(stopCmd);
+		ADBUtil.deletePcFile(STOP_BAT_PATH, null);
 		writeStopBat(stopCmd);
 		return runBat(STOP_BAT_PATH);
 	}
@@ -80,4 +82,5 @@ public class MonkeyUtil {
 	public static String runBat(String batPath) {
 		return ADBUtil.runBat(batPath, null);
 	}
+
 }

@@ -146,7 +146,7 @@ public class MonkeyFrame extends JFrame {
 					monkey.setThrottle(throttle);
 					monkey.setSeed(seed);
 					monkey.setTimes(times);
-					result = MonkeyUtil.runMonkey(monkey);
+					//result = MonkeyUtil.runMonkey(monkey);
 					System.out.println("线程标志置为false");
 					isRunning = false;
 				};
